@@ -1,0 +1,30 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'wallets/style.css' %}">
+<title>Cointracker</title>
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li {% if message.tags %} class=" {{ message.tags }} " {% endif %}> {{ message }} </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<h1>Welcome to Cointracker!</h1>
+
+<h2>Most Recent Addresses</h2>
+{% if most_recent_addresses %}
+    <ul>
+    {% for a in most_recent_addresses %}
+        <li class="monospace"><a href="{% url 'detail' a.id %}">{{ a.address }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No addresses are available.</p>
+{% endif %}
+
+<form action="{% url 'add' %}" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="add">
+</form>

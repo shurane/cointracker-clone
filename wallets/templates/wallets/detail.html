@@ -1,0 +1,34 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'wallets/style.css' %}">
+
+<h1>Bitcoin Address Information</h2>
+
+<p>address: <span class="monospace">{{address.address}}</span> <a href="https://blockchair.com/bitcoin/address/{{address.address}}">blockchair link</a></p>
+
+{% if transactions %}
+    <ul>
+    {% for t in transactions %}
+        <li class="monospace"><a href="https://blockchair.com/bitcoin/transaction/{{t}}">{{t}}</a>, t.fromUser, t.toUser, t.timestamp, t.balance</li>
+    {% endfor %}
+    </ul>
+
+    <footer class="smaller">
+
+    {% if page > 1 %}
+        <a href="{{request.path}}?page={{page|add:'-1'}}">prev</a>
+    {% else %}
+        <span>prev</span>
+    {% endif %}
+
+    [ Page {{page}} out of {{page_total}} | {{transactions_total}} results ]
+
+    {% if page < page_total %}
+        <a href="{{request.path}}?page={{page|add:'1'}}">next</a>
+    {% else %}
+        <span>next</span>
+    {% endif %}
+
+    </footer>
+{% else %}
+    <p>No transactions are available.</p>
+{% endif %}
