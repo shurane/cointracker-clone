@@ -5,3 +5,20 @@
 .smaller {
     font-size: smaller;
 }
+
+.grid {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.grid th, .grid td {
+    border: 1px dotted black;
+}
+
+.right-align {
+    text-align: right;
+}
+
+.hidden-form {
+    margin-block-end: 0em;
+}

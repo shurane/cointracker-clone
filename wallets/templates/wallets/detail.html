@@ -1,21 +1,48 @@
 {% load static %}
+{% load humanize %}
 <link rel="stylesheet" type="text/css" href="{% static 'wallets/style.css' %}">
 
 <h1>Bitcoin Address Information</h2>
 
-<p>address: <span class="monospace">{{address.address}}</span> <a href="https://blockchair.com/bitcoin/address/{{address.address}}">blockchair link</a></p>
+<header>
+    <a href="{% url 'index' %}">Home</a>
+</header>
+
+<p>address:
+    <span class="monospace"><a href={{address.address}}/>{{address.address}}</a></span>,
+    <span class="monospace">balance ($USD): {{balance | floatformat:2 | intcomma  }}</span>
+</p>
 
 {% if transactions %}
-    <ul>
-    {% for t in transactions %}
-        <li class="monospace"><a href="https://blockchair.com/bitcoin/transaction/{{t}}">{{t}}</a>, t.fromUser, t.toUser, t.timestamp, t.balance</li>
+    <table class="grid">
+    <th>Timestamp</th>
+    <th>Transaction</th>
+    <th>Recipient</th>
+    <th>Amount</th>
+    <th>Track</th>
+    {% for t, extra in transactions.items %}
+        <tr class="monospace">
+            <td>{{ extra.timestamp }}</td>
+            <td><a href="https://blockchair.com/bitcoin/transaction/{{t}}">{{t}}</a></td>
+            <td>{{ extra.first_recipient }}</td>
+            <td class="right-align">${{ extra.amount | floatformat:2 | intcomma }}</td>
+            <td>
+            {% if extra.first_recipient_not_tracked %}
+                <form class="hidden-form" action="{% url 'add' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="address" value="{{ extra.first_recipient }}" />
+                    <input type="submit" value="add">
+                </form>
+            {% endif %}
+            </td>
+        </tr>
     {% endfor %}
-    </ul>
+    </table>
 
     <footer class="smaller">
 
     {% if page > 1 %}
-        <a href="{{request.path}}?page={{page|add:'-1'}}">prev</a>
+        <a href="{{request.path}}?page={{page|add:-1}}">prev</a>
     {% else %}
         <span>prev</span>
     {% endif %}
@@ -23,7 +50,7 @@
     [ Page {{page}} out of {{page_total}} | {{transactions_total}} results ]
 
     {% if page < page_total %}
-        <a href="{{request.path}}?page={{page|add:'1'}}">next</a>
+        <a href="{{request.path}}?page={{page|add:1}}">next</a>
     {% else %}
         <span>next</span>
     {% endif %}

@@ -23,7 +23,7 @@ session = CachedSession(
     "cache.sqlite3",
     use_cache_dir=True,
     cache_control=True,
-    expire_after=timedelta(hours=3),
+    expire_after=timedelta(minutes=10),
     allowable_codes=[200, 400],
     allowable_methods=["GET", "POST"],
 )
@@ -61,34 +61,43 @@ def detail(request: HttpRequest, address_id: int) -> HttpResponse:
 
     address_info = BLOCKCHAIR_ADDRESS.format(address.address)
     address_request = session.get(address_info)
+    address_data = address_request.json()["data"]
+    balance = address_data[address.address]["address"]["balance_usd"]
+    transactions_ids = address_data[address.address]["transactions"]
 
-    # blockchair doesn't expose transactions right away
-    data = address_request.json()["data"]
-    first_key = list(data.keys())[0]
-
-    transactions = data[first_key]["transactions"]
     # page is offset by 1
     page_value = request.GET.get("page")
-    page_total = math.ceil(len(transactions) // PAGE_SIZE)
+    page_total = math.ceil(len(transactions_ids) // PAGE_SIZE)
     page = to_int(page_value, minval=1, maxval=page_total, default=1)
     offset = (page-1) * PAGE_SIZE
 
-    transactions_page = transactions[offset:(offset+PAGE_SIZE)]
+    transactions_page = transactions_ids[offset:(offset+PAGE_SIZE)]
 
     transactions_param = ",".join(transactions_page)
     transactions_info = BLOCKCHAIR_TRANSACTIONS.format(transactions_param)
-    transactions_request = session.get(transactions_info)
+    transactions_data = session.get(transactions_info).json()["data"]
 
-    # logger.info(f"URL: {transactions_info}")
-    # logger.info(transactions_request)
+    transactions = dict()
+    for t in transactions_page:
+        first_recipient = transactions_data[t]["outputs"][0]["recipient"]
+        first_recipient_not_tracked = not BitcoinAddress.objects.filter(address=first_recipient).exists()
+
+        transactions[t] = {
+            "timestamp": transactions_data[t]["transaction"]["time"],
+            "amount": transactions_data[t]["transaction"]["output_total_usd"],
+            "fee": transactions_data[t]["transaction"]["fee_usd"],
+            "first_recipient": first_recipient,
+            "first_recipient_not_tracked": first_recipient_not_tracked,
+            "form": None,
+        }
 
     context = {
         "address": address,
-        "transactions": transactions_page,
-        "transactions_total": len(transactions),
+        "balance": balance,
+        "transactions": transactions,
+        "transactions_total": len(transactions_ids),
         "page": page,
         "page_total": page_total,
-        "page_size": PAGE_SIZE,
     }
 
     return render(request, "wallets/detail.html", context)
