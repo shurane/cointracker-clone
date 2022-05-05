@@ -73,7 +73,7 @@ def detail(request: HttpRequest, address_id: int) -> HttpResponse:
 
     # page is offset by 1
     page_value = request.GET.get("page")
-    page_total = math.ceil(len(transactions_ids) // PAGE_SIZE)
+    page_total = max(math.ceil(len(transactions_ids) // PAGE_SIZE), 1)
     page = to_int(page_value, min_val=1, max_val=page_total, default=1)
     offset = (page-1) * PAGE_SIZE
 
