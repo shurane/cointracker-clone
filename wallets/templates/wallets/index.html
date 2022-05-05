@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <link rel="stylesheet" type="text/css" href="{% static 'wallets/style.css' %}">
 <title>Cointracker</title>
 
@@ -14,11 +15,18 @@
 
 <h2>Most Recent Addresses</h2>
 {% if most_recent_addresses %}
-    <ul>
-    {% for a in most_recent_addresses %}
-        <li class="monospace"><a href="{% url 'detail' a.id %}">{{ a.address }}</a></li>
-    {% endfor %}
-    </ul>
+    <table class="grid">
+        <tr>
+            <th>Address</th>
+            <th>Balance</th>
+        </tr>
+        {% for a in most_recent_addresses %}
+            <tr class="monospace">
+                <td><a href="{% url 'detail' a.id %}">{{ a.address }}</a></td>
+                <td class="right-align">${{ a.balance | floatformat:2 | intcomma }} </td>
+            </tr>
+        {% endfor %}
+    </table>
 {% else %}
     <p>No addresses are available.</p>
 {% endif %}

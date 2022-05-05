@@ -9,28 +9,32 @@
 </header>
 
 <p>address:
-    <span class="monospace"><a href={{address.address}}/>{{address.address}}</a></span>,
-    <span class="monospace">balance ($USD): {{balance | floatformat:2 | intcomma  }}</span>
+    <span class="monospace"><a href=https://blockchair.com/bitcoin/address/{{address.address}}/>{{address.address}}</a></span>,
+    <span class="monospace">balance: ${{balance | floatformat:2 | intcomma  }}</span>
 </p>
 
 {% if transactions %}
     <table class="grid">
-    <th>Timestamp</th>
-    <th>Transaction</th>
-    <th>Recipient</th>
-    <th>Amount</th>
-    <th>Track</th>
+    <tr>
+        <th>Timestamp</th>
+        <th>Transaction ID</th>
+        <th>Biggest Recipient</th>
+        <th>Recipient Amount</th>
+        <th>Total Amount</th>
+        <th>Add?</th>
+    </tr>
     {% for t, extra in transactions.items %}
         <tr class="monospace">
             <td>{{ extra.timestamp }}</td>
             <td><a href="https://blockchair.com/bitcoin/transaction/{{t}}">{{t}}</a></td>
-            <td>{{ extra.first_recipient }}</td>
+            <td>{{ extra.biggest_recipient }} <a href="https://blockchair.com/bitcoin/address/{{extra.biggest_recipient}}">link</a></td>
+            <td class="right-align">${{ extra.biggest_recipient_amount | floatformat:2 | intcomma }}</td>
             <td class="right-align">${{ extra.amount | floatformat:2 | intcomma }}</td>
             <td>
-            {% if extra.first_recipient_not_tracked %}
+            {% if extra.biggest_recipient_not_tracked %}
                 <form class="hidden-form" action="{% url 'add' %}" method="post">
                     {% csrf_token %}
-                    <input type="hidden" name="address" value="{{ extra.first_recipient }}" />
+                    <input type="hidden" name="address" value="{{ extra.biggest_recipient }}" />
                     <input type="submit" value="add">
                 </form>
             {% endif %}
